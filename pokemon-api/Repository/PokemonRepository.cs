@@ -7,9 +7,8 @@ namespace pokemon.api.Repository
 {
     public class PokemonRepository : RepositoryBase, IPokemonRepository
     {
-        public PokemonRepository(AppDbContext context) : base(context)
-        {
-        }
+        public PokemonRepository(AppDbContext context) : base(context) {}
+
 
         public Pokemon GetPokemonById(int id)
         {
@@ -38,6 +37,43 @@ namespace pokemon.api.Repository
         public ICollection<Pokemon> GetAll()
         {
             return _context.Pokemons.OrderBy(p => p.Id).ToList();
+        }
+
+        public bool Create(int ownerId, int categoryId, Pokemon pokemon)
+        {
+            var pokemonOwnerEntity = _context.Owners.Where(o => o.Id == ownerId).FirstOrDefault();
+            var category = _context.Categories.Where(c => c.Id == categoryId).FirstOrDefault();
+
+            var pokeOwner = new PokemonOwner()
+            {
+                Owner = pokemonOwnerEntity,
+                Pokemon = pokemon,
+            };
+
+            _context.Add(pokeOwner);
+
+            var pokemonCategory = new PokemonCategory()
+            {
+                Category = category,
+                Pokemon = pokemon,
+            };
+            
+            _context.Add(pokemonCategory);
+
+            _context.Add(pokemon);
+
+            return Save();
+        }
+
+        public bool Update(Pokemon pokemon)
+        {
+            _context.Update(pokemon);
+            return Save();
+        }
+        public bool Delete(Pokemon pokemon)
+        {
+            _context.Remove(pokemon);
+            return Save();
         }
     }
 }

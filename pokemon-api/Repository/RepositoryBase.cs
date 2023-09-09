@@ -9,5 +9,11 @@ namespace pokemon.api.Repository
         {
             _context = context;
         }
+
+        protected bool Save()
+        {
+            var isSaved = _context.SaveChanges();
+            return isSaved > 0;
+        }
     }
 }

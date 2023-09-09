@@ -9,5 +9,8 @@ namespace pokemon.api.Interfaces
         Pokemon GetPokemonByName(string name);
         decimal GetPokemonRating(int pokeId);
         bool PokemonExist(int pokeId);
+        bool Create(int ownerId, int categoryId, Pokemon pokemon);
+        bool Update(Pokemon pokemon);
+        bool Delete(Pokemon pokemon);        
     }
 }

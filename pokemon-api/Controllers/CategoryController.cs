@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using pokemon.api.DTO;
+using pokemon.api.DTO.Concrete;
 using pokemon.api.Interfaces;
 using pokemon.api.Models;
 using pokemon.api.Repository;
@@ -38,12 +38,12 @@ namespace pokemon.api.Controllers
             if (!_categoryRepository.CategoryExist(categoryId))
                 return NotFound();
 
-            var pokemon = _mapper.Map<CategoryDTO>(_categoryRepository.GetCategoryById(categoryId));
+            var category = _mapper.Map<CategoryDTO>(_categoryRepository.GetCategoryById(categoryId));
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            return Ok(pokemon);
+            return Ok(category);
         }
 
         [HttpGet("pokemon/{categoryId}")]
@@ -51,12 +51,103 @@ namespace pokemon.api.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetPokemonsByCategory(int categoryId)
         {
-            var pokemons = _mapper.Map<List<PokemonDTO>>(_categoryRepository.GetPokemonByCategory(categoryId));
+            var categories = _mapper.Map<List<PokemonDTO>>(_categoryRepository.GetPokemonByCategory(categoryId));
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            return Ok(pokemons);
+            return Ok(categories);
         }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateCategory([FromBody] CategoryDTO categoryCreate)
+        {
+            if (categoryCreate == null)
+                return BadRequest(ModelState);
+
+            var category = _categoryRepository.GetAll()
+                .Where(c => c.Name.Trim().ToUpper() == categoryCreate.Name.Trim().ToUpper())
+                .FirstOrDefault();
+
+            if (category != null)
+            {
+                ModelState.AddModelError("", "Category already exists");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var categoryMap = _mapper.Map<Category>(categoryCreate);
+
+            if (!_categoryRepository.Create(categoryMap))
+            {
+                ModelState.AddModelError("", "Something went wrong while saving");
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok("Succesfully Created");
+        }
+
+        [HttpPut]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public IActionResult UpdateCategory([FromQuery] int categoryId, [FromBody] CategoryDTO updateCategory)
+        {
+            if (updateCategory == null)
+                return BadRequest(ModelState);
+            
+            if (categoryId != updateCategory.Id)
+                return BadRequest(ModelState);
+
+            if (!_categoryRepository.CategoryExist(categoryId))
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            var categoryMap = _mapper.Map<Category>(updateCategory);
+
+            if (!_categoryRepository.Update(categoryMap))
+            {
+                ModelState.AddModelError("", "Something went wrong");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{categoryId}")]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public IActionResult DeleteCategory(int categoryId)
+        {
+            if (!_categoryRepository.CategoryExist(categoryId))
+                return NotFound();
+
+            var category = _categoryRepository.GetCategoryById(categoryId);
+
+            if (_categoryRepository.GetPokemonByCategory(categoryId).Any())
+            {
+                ModelState.AddModelError("", "Something went wrong");
+                return StatusCode(500, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!_categoryRepository.Delete(category))
+            {
+                ModelState.AddModelError("", "Something went wrong");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
     }
 }

@@ -8,6 +8,8 @@ namespace pokemon.api.Interfaces
         ICollection<Category> GetAll();
         ICollection<Pokemon> GetPokemonByCategory(int categoryId);
         bool CategoryExist(int id);
-
+        bool Create(Category category);
+        bool Update(Category category);
+        bool Delete(Category category);
     }
 }

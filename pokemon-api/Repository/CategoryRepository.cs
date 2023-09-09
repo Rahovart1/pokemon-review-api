@@ -6,10 +6,7 @@ namespace pokemon.api.Repository
 {
     public class CategoryRepository : RepositoryBase, ICategoryRepository
     {
-        public CategoryRepository(AppDbContext context) : base(context)
-        {
-            
-        }
+        public CategoryRepository(AppDbContext context) : base(context) {}
         public bool CategoryExist(int id)
         {
             return _context.Categories.Any(c => c.Id == id);
@@ -29,5 +26,23 @@ namespace pokemon.api.Repository
         {
             return _context.Categories.OrderBy(c => c.Id).ToList();
         }
+
+        public bool Create(Category category)
+        {
+            _context.Add(category);
+            return Save();
+        }
+        public bool Update(Category category)
+        {
+            _context.Update(category);
+            return Save();
+        }
+
+        public bool Delete(Category category)
+        {
+            _context.Remove(category);
+            return Save();
+        }
+
     }
 }
